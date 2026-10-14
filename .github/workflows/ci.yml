@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [feat/**]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Secret scan
+        run: |
+          set -e
+          if grep -RInE 'ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}' --exclude-dir=node_modules --exclude-dir=.git . ; then exit 1; fi
+          if grep -RInE 'ca-app-pub-[0-9]+' --exclude-dir=node_modules --exclude-dir=.git www android 2>/dev/null | grep -v '3940256099942544' ; then exit 1; fi
+          echo OK

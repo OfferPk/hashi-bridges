@@ -1,0 +1,37 @@
+{
+  "name": "hashi-bridges",
+  "version": "1.0.0",
+  "description": "Zen Bridges (Hashi): calm offline Hashiwokakero logic puzzle. Vanilla JS + Capacitor Android.",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "serve": "npx --yes http-server www -p 8080 -c-1",
+    "test": "node test/logic.test.js",
+    "sync": "npx cap sync android",
+    "build": "node scripts/build.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OfferPk/hashi-bridges.git"
+  },
+  "keywords": [
+    "hashi",
+    "bridges",
+    "hashiwokakero",
+    "offline-game",
+    "puzzle",
+    "capacitor",
+    "logic-puzzle"
+  ],
+  "author": "OfferPk",
+  "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/core": "^8.5.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

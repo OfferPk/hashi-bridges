@@ -1,0 +1,83 @@
+name: Android build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run logic tests
+        run: npm test
+
+      - name: Secret scan (no tokens / real AdMob / keystores)
+        run: |
+          set -e
+          if grep -RInE 'ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}' --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=android . ; then
+            echo "Found GitHub token-like string"; exit 1
+          fi
+          # Allow only Google's official test publisher prefix 3940256099942544
+          if grep -RInE 'ca-app-pub-[0-9]+' --exclude-dir=node_modules --exclude-dir=.git www android 2>/dev/null | grep -v '3940256099942544' ; then
+            echo "Found non-test AdMob ID"; exit 1
+          fi
+          if find . -name '*.jks' -o -name '*.keystore' | grep -v node_modules | grep . ; then
+            echo "Found keystore file"; exit 1
+          fi
+          echo "Secret scan clean"
+
+      - name: Sync Capacitor Android
+        run: npx cap sync android
+
+      - name: Assemble Android Debug APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug
+
+      - name: Collect outputs
+        run: |
+          mkdir -p dist
+          cp android/app/build/outputs/apk/debug/app-debug.apk dist/hashi-bridges-debug.apk
+          ls -la dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hashi-bridges-apk
+          path: dist/*.apk
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Zen Bridges ${{ github.ref_name }}
+          generate_release_notes: true
+          files: |
+            dist/*.apk
