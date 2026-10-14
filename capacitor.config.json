@@ -1,0 +1,9 @@
+{
+  "appId": "pk.offer.hashibridges",
+  "appName": "Zen Bridges",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "android": {
+    "backgroundColor": "#0b1220"
+  }
+}

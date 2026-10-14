@@ -1,0 +1,5 @@
+- [ ] Replace AdMob test IDs with production units
+- [ ] Feature graphic 1024×500
+- [ ] Phone screenshots (already in docs/)
+- [ ] Privacy policy URL live
+- [ ] Signed release AAB (keystore secrets)
