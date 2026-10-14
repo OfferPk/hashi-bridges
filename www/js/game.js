@@ -16,6 +16,7 @@
   let state = null;
   let levelIndex = 0;
   let selectedId = null;
+  let activeId = null;
   let history = [];
   let animPulse = 0;
 
@@ -60,8 +61,12 @@
     $('btn-continue').textContent = label;
     HashiSound.setEnabled(!!save.sound);
     $('play-sound').textContent = save.sound ? '🔊' : '🔇';
+    $('play-sound').setAttribute('aria-label', save.sound ? 'Mute sound' : 'Enable sound');
+    $('play-sound').setAttribute('aria-pressed', String(!!save.sound));
     $('sw-sound').classList.toggle('on', !!save.sound);
     $('sw-haptic').classList.toggle('on', !!save.haptic);
+    $('sw-sound').setAttribute('aria-pressed', String(!!save.sound));
+    $('sw-haptic').setAttribute('aria-pressed', String(!!save.haptic));
   }
 
   function canPlayLevel(i) {
@@ -79,6 +84,8 @@
       if (save.cleared[i]) b.classList.add('done');
       b.innerHTML = `<span>${i + 1}</span><small>${lv.difficulty}</small>`;
       b.disabled = !canPlay;
+      const levelState = save.cleared[i] ? 'completed' : canPlay ? 'available' : 'locked';
+      b.setAttribute('aria-label', `Level ${i + 1}, ${lv.difficulty}, ${levelState}`);
       b.addEventListener('click', () => startLevel(i));
       grid.appendChild(b);
     });
@@ -91,23 +98,34 @@
     const lv = LEVELS[i];
     state = H.createPuzzle(lv.rows, lv.cols, lv.islands);
     selectedId = null;
+    activeId = state.islands.length ? state.islands[0].id : null;
     history = [];
+    syncUndoButton();
     $('play-title').textContent = `Level ${i + 1}`;
     $('hint-bar').textContent = 'Tap an island, then a neighbor to build bridges.';
     show('play');
     resizeBoard();
     draw();
+    try { canvas.focus({ preventScroll: true }); } catch (_) { canvas.focus(); }
     HashiSound.unlock();
   }
 
   function pushHist() {
     history.push(H.cloneState(state));
     if (history.length > 80) history.shift();
+    syncUndoButton();
+  }
+
+  function syncUndoButton() {
+    $('btn-undo').disabled = history.length === 0;
   }
 
   function resizeBoard() {
     const wrap = canvas.parentElement.getBoundingClientRect();
-    const size = Math.floor(Math.min(wrap.width - 8, wrap.height - 8, 560));
+    const style = window.getComputedStyle(canvas.parentElement);
+    const paddingX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+    const paddingY = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+    const size = Math.max(0, Math.floor(Math.min(wrap.width - paddingX - 8, wrap.height - paddingY - 8, 560)));
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     canvas.style.width = size + 'px';
     canvas.style.height = size + 'px';
@@ -119,9 +137,9 @@
 
   function layout() {
     if (!state) return null;
-    const pad = 28;
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
+    const pad = Math.max(38, Math.min(54, Math.min(w, h) * 0.12));
     const cellW = (w - pad * 2) / Math.max(1, state.cols - 1 || 1);
     const cellH = (h - pad * 2) / Math.max(1, state.rows - 1 || 1);
     // single-cell grids
@@ -229,6 +247,13 @@
       grd.addColorStop(1, '#0f172a');
       ctx.fillStyle = grd;
       ctx.fill();
+      if (activeId === isl.id) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, L.rIsland + 6, 0, Math.PI * 2);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = selectedId === isl.id ? 'rgba(88,224,193,0.78)' : 'rgba(108,203,255,0.72)';
+        ctx.stroke();
+      }
       ctx.lineWidth = 3;
       ctx.strokeStyle = ring;
       ctx.stroke();
@@ -265,14 +290,17 @@
       draw();
       return;
     }
+    activeId = id;
     HashiSound.tap();
     if (selectedId == null) {
       selectedId = id;
+      $('hint-bar').textContent = 'Island selected. Choose a visible neighbor, or press Escape to cancel.';
       draw();
       return;
     }
     if (selectedId === id) {
       selectedId = null;
+      $('hint-bar').textContent = 'Selection cleared. Choose an island to begin.';
       draw();
       return;
     }
@@ -287,6 +315,7 @@
     const res = H.cycleBridge(state, selectedId, id);
     if (!res.ok) {
       history.pop();
+      syncUndoButton();
       HashiSound.error();
       $('hint-bar').textContent =
         res.reason === 'cross' ? 'Bridges cannot cross.' :
@@ -325,6 +354,49 @@
     $('modal-win').classList.add('open');
     if (typeof Ads !== 'undefined') Ads.maybeInterstitial();
   }
+
+  function moveActive(direction) {
+    if (!state || !state.islands.length) return;
+    if (activeId == null) activeId = state.islands[0].id;
+    const current = H.islandById(state, activeId);
+    const vertical = direction === 'ArrowUp' || direction === 'ArrowDown';
+    const sign = direction === 'ArrowUp' || direction === 'ArrowLeft' ? -1 : 1;
+    const candidates = H.neighborsVisible(state, activeId)
+      .map((id) => H.islandById(state, id))
+      .filter((island) => vertical
+        ? (island.c === current.c && Math.sign(island.r - current.r) === sign)
+        : (island.r === current.r && Math.sign(island.c - current.c) === sign));
+    if (!candidates.length) {
+      $('hint-bar').textContent = `No visible island ${direction === 'ArrowUp' ? 'above' : direction === 'ArrowDown' ? 'below' : direction === 'ArrowLeft' ? 'to the left' : 'to the right'}.`;
+      return;
+    }
+    candidates.sort((a, b) => vertical ? Math.abs(a.r - current.r) - Math.abs(b.r - current.r) : Math.abs(a.c - current.c) - Math.abs(b.c - current.c));
+    activeId = candidates[0].id;
+    const number = state.islands.findIndex((island) => island.id === activeId) + 1;
+    $('hint-bar').textContent = `Island ${number} of ${state.islands.length}. Press Enter to select or connect.`;
+    draw();
+  }
+
+  canvas.addEventListener('keydown', (e) => {
+    if (!state) return;
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+      e.preventDefault();
+      moveActive(e.key);
+      return;
+    }
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+      e.preventDefault();
+      if (activeId == null) activeId = state.islands[0]?.id ?? null;
+      onTap(activeId);
+      return;
+    }
+    if (e.key === 'Escape' && selectedId != null) {
+      e.preventDefault();
+      selectedId = null;
+      $('hint-bar').textContent = 'Selection cancelled. Choose an island to begin.';
+      draw();
+    }
+  });
 
   // Pointer
   canvas.addEventListener('pointerdown', (e) => {
@@ -370,6 +442,8 @@
     if (!history.length) return;
     state = history.pop();
     selectedId = null;
+    syncUndoButton();
+    $('hint-bar').textContent = 'Last move undone.';
     draw();
     HashiSound.remove();
   };
@@ -377,6 +451,7 @@
     pushHist();
     state.bridges = {};
     selectedId = null;
+    $('hint-bar').textContent = 'Board reset.';
     draw();
     HashiSound.remove();
   };
@@ -414,6 +489,7 @@
       if (H.isComplete(state)) onWin();
     } else {
       history.pop();
+      syncUndoButton();
       $('hint-bar').textContent = 'Hint conflict — undo a few moves.';
       HashiSound.error();
     }

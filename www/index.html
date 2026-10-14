@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#0b1220">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#08131e">
   <meta name="description" content="Zen Bridges — calm offline Hashi (Hashiwokakero) puzzle. Connect numbered islands with bridges.">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,88 +16,175 @@
 <body>
   <div id="app">
     <!-- HOME -->
-    <section id="home" class="screen active">
-      <div class="brand">
-        <img src="favicon.svg" alt="Zen Bridges">
-        <h1>ZEN BRIDGES</h1>
-        <p>Hashiwokakero · offline calm puzzle</p>
+    <section id="home" class="screen active home-screen" aria-labelledby="home-title">
+      <header class="brand">
+        <div class="brand-mark"><img src="favicon.svg" alt=""></div>
+        <div class="brand-copy">
+          <p class="brand-kicker">A QUIET LOGIC PUZZLE</p>
+          <h1>ZEN BRIDGES</h1>
+          <p>Hashiwokakero · offline calm puzzle</p>
+        </div>
+      </header>
+
+      <div class="home-layout">
+        <section class="home-story" aria-labelledby="home-title">
+          <div class="home-kicker"><span class="status-dot" aria-hidden="true"></span>40 solver-verified puzzles</div>
+          <h2 id="home-title">Connect the islands.<br><span>Find your flow.</span></h2>
+          <p class="home-copy">Read the clues, draw a clear path, and bring every island into one calm, connected network.</p>
+          <div class="stat-row" aria-label="Your progress">
+            <div class="stat">
+              <span class="stat-mark" aria-hidden="true">01</span>
+              <span class="stat-copy"><b id="stat-cleared" aria-live="polite">0</b><span>Levels cleared</span></span>
+            </div>
+            <div class="stat">
+              <span class="stat-mark" aria-hidden="true">02</span>
+              <span class="stat-copy"><b id="stat-streak" aria-live="polite">0</b><span>Best streak</span></span>
+            </div>
+          </div>
+          <div class="home-note"><span>NO TIMER</span><i aria-hidden="true">·</i><span>PLAY OFFLINE</span><i aria-hidden="true">·</i><span>AT YOUR PACE</span></div>
+        </section>
+
+        <section class="home-menu" aria-label="Start playing">
+          <div class="menu-heading">
+            <p class="eyebrow">YOUR NEXT MOVE</p>
+            <h2>Pick up the flow.</h2>
+            <p>Settle in for a thoughtful little challenge.</p>
+          </div>
+          <div class="home-actions">
+            <button id="btn-continue" class="btn primary block">Play level 1</button>
+            <button id="btn-levels" class="btn secondary block">Level select</button>
+            <div class="utility-actions">
+              <button id="btn-howto" class="btn ghost block">How to play</button>
+              <button id="btn-settings" class="btn ghost block">Settings</button>
+            </div>
+          </div>
+          <div class="menu-footnote"><span class="offline-mark" aria-hidden="true">✓</span>Progress saved on this device</div>
+        </section>
       </div>
-      <div class="stat-row">
-        <div class="stat"><b id="stat-cleared">0</b><span>Levels cleared</span></div>
-        <div class="stat"><b id="stat-streak">0</b><span>Best streak</span></div>
-      </div>
-      <div class="home-actions">
-        <button id="btn-continue" class="btn primary block">Continue</button>
-        <button id="btn-levels" class="btn block">Level select</button>
-        <button id="btn-howto" class="btn ghost block">How to play</button>
-        <button id="btn-settings" class="btn ghost block">Settings</button>
-      </div>
+
       <div class="footer-link"><a href="privacy.html">Privacy policy</a></div>
     </section>
 
     <!-- LEVELS -->
-    <section id="levels" class="screen">
+    <section id="levels" class="screen" aria-labelledby="levels-title">
       <div class="topbar">
-        <button class="icon-btn" id="levels-back" aria-label="Back">←</button>
-        <div class="title">Levels</div>
-        <span style="width:42px"></span>
+        <button class="icon-btn" id="levels-back" aria-label="Back to home">←</button>
+        <div class="title-wrap">
+          <span class="eyebrow">YOUR COLLECTION</span>
+          <div class="title" id="levels-title">Choose a level</div>
+        </div>
+        <span class="topbar-meta">40 PUZZLES</span>
       </div>
-      <div id="levels-grid" class="levels-grid"></div>
+      <div id="levels-grid" class="levels-grid" role="group" aria-label="Puzzle levels"></div>
     </section>
 
     <!-- PLAY -->
-    <section id="play" class="screen">
-      <div class="topbar">
-        <button class="icon-btn" id="play-home" aria-label="Home">⌂</button>
-        <div class="title" id="play-title">Level 1</div>
-        <button class="icon-btn" id="play-sound" aria-label="Sound">🔊</button>
+    <section id="play" class="screen play-screen" aria-label="Hashi puzzle">
+      <div class="topbar play-topbar">
+        <button class="icon-btn" id="play-home" aria-label="Return home">←</button>
+        <div class="title-wrap">
+          <span class="eyebrow">ZEN BRIDGES</span>
+          <div class="title" id="play-title">Level 1</div>
+        </div>
+        <button class="icon-btn sound-btn" id="play-sound" aria-label="Mute sound" aria-pressed="true">🔊</button>
       </div>
-      <div class="board-wrap">
-        <canvas id="board" width="400" height="400" aria-label="Hashi board"></canvas>
+
+      <div class="play-content">
+        <section class="board-column" aria-label="Puzzle board area">
+          <div class="board-heading">
+            <div>
+              <span class="eyebrow">THE BOARD</span>
+              <p>Connect islands with clear lines.</p>
+            </div>
+            <span class="board-count">40 LEVELS</span>
+          </div>
+          <div class="board-wrap">
+            <canvas id="board" width="400" height="400" tabindex="0" aria-label="Hashi puzzle board. Use arrow keys to move between visible islands, Enter to select or connect, and Escape to cancel." aria-describedby="board-instructions hint-bar"></canvas>
+          </div>
+          <p id="board-instructions" class="sr-only">Use the arrow keys to move between islands that can be connected. Press Enter or Space to select an island and connect it to another. Press Escape to cancel a selection.</p>
+        </section>
+
+        <aside class="play-panel" aria-label="Puzzle guide and controls">
+          <div class="panel-heading">
+            <span class="eyebrow">THE GOAL</span>
+            <h2>One connected network.</h2>
+            <p>Each number is the exact count of bridge ends that must touch that island.</p>
+          </div>
+          <div class="rule-list" aria-label="Quick rules">
+            <div class="rule-step"><span class="step-number">01</span><span class="step-copy"><b>Choose an island</b><small>Then pick one in its clear line.</small></span></div>
+            <div class="rule-step"><span class="step-number">02</span><span class="step-copy"><b>Build one or two bridges</b><small>Tap again to cycle the count.</small></span></div>
+            <div class="rule-step"><span class="step-number">03</span><span class="step-copy"><b>Connect every island</b><small>No crossing bridges or loose groups.</small></span></div>
+          </div>
+          <div class="panel-divider" aria-hidden="true"></div>
+          <div class="toolbar" role="group" aria-label="Puzzle actions">
+            <button class="btn small" id="btn-undo">Undo</button>
+            <button class="btn small" id="btn-hint">Hint</button>
+            <button class="btn small" id="btn-reset">Reset</button>
+            <button class="btn small" id="btn-levels2">Levels</button>
+          </div>
+          <div class="hint-card">
+            <span class="hint-mark" aria-hidden="true">i</span>
+            <p class="hint-bar" id="hint-bar" role="status" aria-live="polite" aria-atomic="true">Tap an island, then a neighbor to build bridges.</p>
+          </div>
+        </aside>
       </div>
-      <div class="toolbar">
-        <button class="btn small" id="btn-undo">Undo</button>
-        <button class="btn small" id="btn-hint">Hint</button>
-        <button class="btn small" id="btn-reset">Reset</button>
-        <button class="btn small" id="btn-levels2">Levels</button>
-      </div>
-      <div class="hint-bar" id="hint-bar">Tap an island, then a neighbor to build bridges.</div>
     </section>
 
     <!-- SETTINGS -->
-    <section id="settings" class="screen">
+    <section id="settings" class="screen" aria-labelledby="settings-title">
       <div class="topbar">
-        <button class="icon-btn" id="settings-back" aria-label="Back">←</button>
-        <div class="title">Settings</div>
-        <span style="width:42px"></span>
+        <button class="icon-btn" id="settings-back" aria-label="Back to home">←</button>
+        <div class="title-wrap">
+          <span class="eyebrow">MAKE IT YOURS</span>
+          <div class="title" id="settings-title">Settings</div>
+        </div>
+        <span class="topbar-meta">ON DEVICE</span>
       </div>
-      <div class="settings-list">
-        <div class="setting"><span>Sound effects</span><button id="sw-sound" class="switch on" aria-label="Sound"></button></div>
-        <div class="setting"><span>Vibrate on place</span><button id="sw-haptic" class="switch on" aria-label="Haptics"></button></div>
-        <button id="btn-reset-progress" class="btn ghost block">Reset progress</button>
+      <div class="settings-layout">
+        <section class="settings-intro">
+          <p class="eyebrow">A LITTLE MORE COMFORT</p>
+          <h2>Play your way.</h2>
+          <p>Choose the small touches that make each puzzle feel right for you.</p>
+        </section>
+        <div class="settings-list">
+          <div class="setting">
+            <span class="setting-copy"><b>Sound effects</b><small>Soft cues for bridges and hints</small></span>
+            <button id="sw-sound" class="switch on" aria-label="Sound effects" aria-pressed="true"></button>
+          </div>
+          <div class="setting">
+            <span class="setting-copy"><b>Vibrate on place</b><small>Gentle feedback on supported devices</small></span>
+            <button id="sw-haptic" class="switch on" aria-label="Vibrate on place" aria-pressed="true"></button>
+          </div>
+          <div class="settings-reset">
+            <span><b>Start fresh?</b><small>Clear saved level progress on this device.</small></span>
+            <button id="btn-reset-progress" class="btn danger ghost">Reset progress</button>
+          </div>
+        </div>
       </div>
     </section>
   </div>
 
-  <div id="modal-howto" class="modal" role="dialog" aria-modal="true">
+  <div id="modal-howto" class="modal" role="dialog" aria-modal="true" aria-labelledby="howto-title" tabindex="-1">
     <div class="card">
-      <h2>How to play</h2>
+      <span class="eyebrow">THE BASICS</span>
+      <h2 id="howto-title">How to play</h2>
       <p>Connect the numbered islands with bridges:</p>
-      <ul style="color:var(--muted);padding-left:18px;line-height:1.5">
+      <ul class="howto-list">
         <li>Bridges run only horizontally or vertically.</li>
-        <li>At most <b>two</b> bridges between the same pair.</li>
-        <li>Bridges never cross and never pass through islands.</li>
-        <li>Each island’s number equals how many bridge ends touch it.</li>
-        <li>All islands must form one connected network.</li>
+        <li>At most <b>two</b> bridges can connect the same pair.</li>
+        <li>Bridges never cross or pass through another island.</li>
+        <li>Each island’s number equals the bridge ends touching it.</li>
+        <li>Every island must belong to one connected network.</li>
       </ul>
-      <p>Tap an island to select it, then tap another in line to cycle 0→1→2 bridges.</p>
+      <p>Tap an island, then tap another in a clear line to cycle 0 → 1 → 2 bridges. On a keyboard, use the arrow keys and Enter.</p>
       <div class="row"><button class="btn primary" data-close="modal-howto">Got it</button></div>
     </div>
   </div>
 
-  <div id="modal-win" class="modal" role="dialog" aria-modal="true">
+  <div id="modal-win" class="modal" role="dialog" aria-modal="true" aria-labelledby="win-title" tabindex="-1">
     <div class="card">
-      <h2>Level complete</h2>
+      <span class="eyebrow">WELL CONNECTED</span>
+      <h2 id="win-title">Level complete</h2>
       <p id="win-text">Nice bridging.</p>
       <div class="row">
         <button class="btn ghost" id="win-levels">Levels</button>
